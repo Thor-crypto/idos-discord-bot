@@ -1,0 +1,24 @@
+name: IDOS to Discord
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+    workflow_dispatch:
+
+jobs:
+  run-idos-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run bot
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: node idos-discord.js
