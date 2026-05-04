@@ -9,7 +9,7 @@ async function send(content) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: "IDOS Bot",
-      content
+      content: content
     })
   });
 }
@@ -26,23 +26,24 @@ async function main() {
     .replace(/\s+/g, " ");
 
   const spoje = [...text.matchAll(/\b((?:Os|Sp|R|Rx|Ex|IC|EC|EN|RJ|LE)\s?\d+)\b.{0,120}?(\d{1,2}:\d{2})/g)]
-  .map(m => ({
-    vlak: m[1],
-    cas: m[2]
-  }))
-  .slice(0, 10);
+    .map(m => ({
+      vlak: m[1],
+      cas: m[2]
+    }))
+    .slice(0, 10);
 
-if (!spoje.length) {
-  await send("⚠️ Nepodařilo se načíst názvy vlaků.");
-  return;
+  if (!spoje.length) {
+    await send("⚠️ Nepodařilo se načíst názvy vlaků.");
+    return;
+  }
+
+  await send(
+    "🚆 **Příjezdy do Praha hl.n.**\n\n" +
+    spoje.map(s => `• **${s.cas}** — ${s.vlak}`).join("\n") +
+    "\n\n" +
+    IDOS_URL
+  );
 }
-
-await send(
-  "🚆 **Příjezdy do Praha hl.n.**\n\n" +
-  spoje.map(s => `• **${s.cas}** — ${s.vlak}`).join("\n") +
-  "\n\n" +
-  IDOS_URL
-);
 
 main().catch(async err => {
   console.error(err);
