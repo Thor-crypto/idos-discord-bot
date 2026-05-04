@@ -3,7 +3,7 @@ name: IDOS to Discord
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'  Runs every 5 minutes
+    - cron: '*/5 * * * *'Runs every 5 minutes
 
 jobs:
   run-idos-bot:
