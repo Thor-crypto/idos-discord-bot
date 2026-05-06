@@ -25,12 +25,13 @@ async function main() {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
-  const spoje = [...text.matchAll(/\b((?:Os|Sp|R|Rx|Ex|IC|EC|EN|RJ|LE)\s?\d+)\b.{0,120}?(\d{1,2}:\d{2})/g)]
-    .map(m => ({
-      vlak: m[1],
-      cas: m[2]
-    }))
-    .slice(0, 10);
+  const spoje = [...text.matchAll(/\b((?:Os|Sp|R|Rx|Ex|IC|EC|EN|RJ|LE)\s?\d+)\b.{0,120}?(\d{1,2}:\d{2}).{0,160}?(?:Aktuální zpoždění\s*(\d+)\s*(?:minut|minuta|minuty)|zpoždění\s*(\d+)\s*(?:minut|minuta|minuty))?/gi)]
+  .map(m => ({
+    vlak: m[1],
+    cas: m[2],
+    zpozdeni: Number(m[3] || m[4] || 0)
+  }))
+  .slice(0, 10);
 
   if (!spoje.length) {
     await send("⚠️ Nepodařilo se načíst názvy vlaků.");
