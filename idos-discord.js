@@ -38,15 +38,20 @@ async function main() {
   }
 
   await send(
-    "🚆 **Příjezdy do Praha hl.n.**\n\n" +
-    spoje.map(s => `• **${s.cas}** — ${s.vlak}`).join("\n") +
-    "\n\n" +
-    IDOS_URL
-  );
-}
+  "🚆 **Příjezdy do Praha hl.n.**\n\n" +
+  spoje.map(s => {
+    const delayMin = Number(s.zpozdeni || 0);
 
-main().catch(async err => {
-  console.error(err);
-  await send("Chyba IDOS bota: " + err.message);
-  process.exit(1);
-});
+    const [h, m] = s.cas.split(":").map(Number);
+    const delayedDate = new Date(2000, 0, 1, h, m + delayMin);
+    const delayedTime = delayedDate.toTimeString().slice(0, 5);
+
+    const delayText = delayMin > 0
+      ? ` (+${delayMin} min → ${delayedTime})`
+      : "";
+
+    return `• **${s.cas}** — ${s.vlak}${delayText}`;
+  }).join("\n") +
+  "\n\n" +
+  IDOS_URL
+);
