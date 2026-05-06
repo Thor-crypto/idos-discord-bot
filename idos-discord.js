@@ -1,7 +1,15 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
+require('dotenv').config();
 
-const TOKEN = 'SEM_TOKEN';
-const CLIENT_ID = 'SEM_CLIENT_ID';
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  REST,
+  Routes
+} = require('discord.js');
+
+const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -12,13 +20,17 @@ const commands = [
     .setName('spoj')
     .setDescription('Najde spojení')
     .addStringOption(option =>
-      option.setName('odkud')
+      option
+        .setName('odkud')
         .setDescription('Např. Brno')
-        .setRequired(true))
+        .setRequired(true)
+    )
     .addStringOption(option =>
-      option.setName('kam')
+      option
+        .setName('kam')
         .setDescription('Např. Praha')
-        .setRequired(true))
+        .setRequired(true)
+    )
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -52,10 +64,17 @@ client.on('interactionCreate', async interaction => {
     const url =
       `https://super-brook-6e3b.florian-thor007.workers.dev/?odkud=${encodeURIComponent(odkud)}&kam=${encodeURIComponent(kam)}`;
 
-    const res = await fetch(url);
-    const text = await res.text();
+    try {
+      await interaction.deferReply();
 
-    await interaction.reply('```' + text + '```');
+      const res = await fetch(url);
+      const text = await res.text();
+
+      await interaction.editReply('```' + text + '```');
+    } catch (err) {
+      console.error(err);
+      await interaction.editReply('Chyba při získávání spojů.');
+    }
   }
 });
 
