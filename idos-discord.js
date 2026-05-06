@@ -1,58 +1,72 @@
-const WEBHOOK_URL = process.env.WEBHOOK_URL;
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  REST,
+  Routes
+} = require("discord.js");
 
-const IDOS_URL =
-  "https://idos.cz/vlakyautobusymhdvse/odjezdy/vysledky/?f=Praha%20hl.n.&fc=100003&byarr=true&cmd=cmdSearch";
+const TOKEN = "TVŮJ_BOT_TOKEN";
+const CLIENT_ID = "TVÉ_CLIENT_ID";
 
-async function send(content) {
-  await fetch(WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: "IDOS Bot",
-      content: content
-    })
-  });
-}
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds]
+});
 
-async function main() {
-  const res = await fetch(IDOS_URL, {
-    headers: { "User-Agent": "Mozilla/5.0" }
-  });
+client.once("ready", async () => {
+  console.log(`Přihlášen jako ${client.user.tag}`);
 
-  const html = await res.text();
+  const commands = [
+    new SlashCommandBuilder()
+      .setName("spoj")
+      .setDescription("Vyhledá spojení")
+      .addStringOption(option =>
+        option
+          .setName("odkud")
+          .setDescription("Odkud")
+          .setRequired(true)
+      )
+      .addStringOption(option =>
+        option
+          .setName("kam")
+          .setDescription("Kam")
+          .setRequired(true)
+      )
+      .toJSON()
+  ];
 
-  const text = html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ");
+  const rest = new REST({ version: "10" }).setToken(TOKEN);
 
-  const spoje = [...text.matchAll(/\b((?:Os|Sp|R|Rx|Ex|IC|EC|EN|RJ|LE)\s?\d+)\b.{0,120}?(\d{1,2}:\d{2}).{0,160}?(?:Aktuální zpoždění\s*(\d+)\s*(?:minut|minuta|minuty)|zpoždění\s*(\d+)\s*(?:minut|minuta|minuty))?/gi)]
-  .map(m => ({
-    vlak: m[1],
-    cas: m[2],
-    zpozdeni: Number(m[3] || m[4] || 0)
-  }))
-  .slice(0, 10);
+  await rest.put(
+    Routes.applicationCommands(CLIENT_ID),
+    { body: commands }
+  );
 
-  if (!spoje.length) {
-    await send("⚠️ Nepodařilo se načíst názvy vlaků.");
-    return;
+  console.log("Slash command registrován");
+});
+
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "spoj") {
+    const odkud = interaction.options.getString("odkud");
+    const kam = interaction.options.getString("kam");
+
+    await interaction.deferReply();
+
+    try {
+      const res = await fetch(
+        `https://super-brook-6e3b.florian-thor007.workers.dev/?odkud=${encodeURIComponent(odkud)}&kam=${encodeURIComponent(kam)}`
+      );
+
+      const text = await res.text();
+
+      await interaction.editReply(text);
+    } catch (err) {
+      console.error(err);
+      await interaction.editReply("Chyba při hledání spojení.");
+    }
   }
+});
 
-  await send(
-  "🚆 **Příjezdy do Praha hl.n.**\n\n" +
-  spoje.map(s => {
-    const delayMin = Number(s.zpozdeni || 0);
-
-    const [h, m] = s.cas.split(":").map(Number);
-    const delayedDate = new Date(2000, 0, 1, h, m + delayMin);
-    const delayedTime = delayedDate.toTimeString().slice(0, 5);
-
-    const delayText = delayMin > 0
-      ? ` (+${delayMin} min → ${delayedTime})`
-      : "";
-
-    return `• **${s.cas}** — ${s.vlak}${delayText}`;
-  }).join("\n") +
-  "\n\n" +
-  IDOS_URL
-);
+client.login(TOKEN);
