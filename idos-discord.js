@@ -7,7 +7,7 @@ const {
 } = require("discord.js");
 
 const TOKEN = "TVŮJ_BOT_TOKEN";
-const CLIENT_ID = "TVÉ_CLIENT_ID";
+const CLIENT_ID = "1501573205930938408";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
