@@ -8,8 +8,8 @@ const {
   Routes
 } = require('discord.js');
 
-const TOKEN = process.env.TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+const TOKEN = process.env.IDOS_BOT_TOKEN;
+const CLIENT_ID = process.env.CLIENT_BOT_IDOS;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
